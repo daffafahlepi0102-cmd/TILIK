@@ -1,0 +1,2 @@
+import { NextResponse } from 'next/server';
+export async function POST(request: Request) { const body = await request.json(); return NextResponse.json({ ok: true, status: 'transmitted', destination: 'SatuSehat sandbox', attempts: 1, encrypted: true, fhir: { resourceType: 'Bundle', type: 'transaction', entry: [{ resource: { resourceType: 'MedicationDispense', id: body.prescriptionId ?? 'mock-id', status: 'completed' } }] } }); }

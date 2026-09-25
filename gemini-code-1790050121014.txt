@@ -1,0 +1,72 @@
+Buatkan rancangan arsitektur, antarmuka (UI/UX), dan logika sistem full-stack untuk aplikasi web "TILIK" (Teknologi Informasi Lacak dan Kendali Antibiotik). TILIK adalah platform "Local Aggregator Hub" berbasis peramban (Chrome-first) yang dirancang untuk pengawasan peredaran antibiotik secara real-time guna mencegah Antimicrobial Resistance (AMR), dengan memisahkan peran menggunakan Role-Based Access Control (RBAC) dan terintegrasi dengan API SatuSehat Kemenkes.
+
+==================================================
+DESAIN UI/UX FIGMA REFERENSI UTAMA:
+- Link Figma Embed/Design: https://embed.figma.com/design/no7IfW97ShM5h7RZ78se09/Desain-dashboard-SIK?node-id=0-1&embed-host=share
+- Instruksi UI: Gunakan layout, komponen, skema warna, hirarki visual, dan struktur antarmuka yang persis seperti pada tautan desain Figma di atas.
+==================================================
+
+Sistem harus dibangun sesuai dengan 4 tahapan alur kerja (Input, Process, Output, Integration) dan spesifikasi berikut:
+
+---
+
+### 1. AKSES DAN KEAMANAN (RBAC & AUTHENTICATION)
+Sistem memiliki 2 peran utama (User Roles):
+A. Apoteker / Fasilitas Kesehatan (Faskes)
+   - Login menggunakan NIP / Nomor SIPA atau SatuSehat ID (dukungan autentikasi biometrik untuk mobile).
+   - Memiliki wewenang: Input resep, pindai QR resep, catat mutasi stok antibiotik, dan melihat statistik internal apotek.
+B. Dinas Kesehatan (Dinkes) / Regulator
+   - Login menggunakan kredensial resmi otoritas kesehatan daerah.
+   - Memiliki wewenang: Mengakses Dashboard Surveillance Wilayah, menerima notifikasi anomali, melakukan kurasi data, serta menerbitkan rekomendasi/audit.
+
+---
+
+### 2. LOGIKA DAN FITUR BERDASARKAN ALUR FLOWCHART
+
+#### TAHAP 1: INPUT (Apoteker / Faskes Level)
+1. Fitur Pindai & Input Resep:
+   - Apoteker dapat melakukan pendaftaran resep menggunakan Pindai QR Code atau Optical Character Recognition (OCR).
+   - Fitur Penguncian Resep: Jika kode QR resep pernah ditebus di apotek lain, sistem Wajib menolak transaksi dan menampilkan peringatan: "PERINGATAN: RESEP SUDAH DITEBUS!".
+   - Input manual untuk Data Pasien, Diagnosis, dan Detail Obat (Kategori WHO AWaRe: Access, Watch, Reserve, jumlah, dan dokter penanggung jawab).
+2. Validasi Kelayakan Resep:
+   - Jika "Resep Sah dan Lengkap" = TIDAK -> Transaksi diblokir otomatis dan minta perbaikan data.
+   - Jika "Resep Sah dan Lengkap" = YA -> Lakukan validasi data apoteker dan teruskan data ke Agregator Lokal.
+
+#### TAHAP 2: PROCESS (Local Aggregator Hub Level)
+1. Penerimaan & Karantina Data:
+   - Agregator lokal menerima data harian transaksi dari seluruh apotek terintegrasi.
+   - Lakukan penyaringan dan pembersihan data (data quarantine) untuk mencegah "Garbage In, Garbage Out".
+2. Pengolahan & Kalkulasi:
+   - Simpan data bersih ke Database TILIK Lokal.
+   - Kalkulasi otomatis penggunaan antibiotik menggunakan standar WHO (metode ATC/DDD per 1.000 penduduk).
+3. Deteksi Anomali Penjualan:
+   - Sistem menganalisis rasio stok vs riwayat pengeluaran resep.
+   - Jika ditemukan lonjakan penjualan tanpa resep sah (Anomali = YA) -> Terbitkan notifikasi "Yellow Flag / Red Flag" dan buat Laporan Investigasi otomatis.
+   - Jika normal (Anomali = TIDAK) -> Update Dashboard Real-time & siapkan laporan berkala.
+
+#### TAHAP 3: OUTPUT (Dinkes / Regulator Level)
+1. Dashboard Surveillance Interaktif (Sesuai Desain Figma):
+   - Visualisasi Ringkasan: Total Resep Diproses, Tingkat Kepatuhan Apotek (%), Total Anomali Terdeteksi, dan Peta Sebaran Wilayah Pengawasan.
+   - Grafik Tren Konsumsi Antibiotik Nasional/Wilayah (ATC/DDD).
+   - Tabel Daftar Apotek Anomali (Yellow/Red Flag) beserta detail potensi pelanggaran.
+2. Tindakan Intervensi Dinkes:
+   - Jika "Tindakan Intervensi Diperlukan" = YA -> Sistem menyediakan antarmuka untuk menerbitkan Rekomendasi Kebijakan Lokal / Surat Peringatan Audit.
+   - Jika "Tindakan Intervensi Diperlukan" = TIDAK -> Data diproses menjadi Laporan Publik berkala.
+
+#### TAHAP 4: INTEGRATION (SatuSehat Kemenkes Bridging)
+1. Persiapan Ekspor Data Standar:
+   - Data yang telah divalidasi dan dikurasi oleh Dinkes dikonversikan ke format standar FHIR/SatuSehat.
+2. Keamanan & Enkripsi Transmisi:
+   - Lakukan enkripsi data tingkat tinggi sebelum pengiriman via API SatuSehat.
+3. Transmisi Data API:
+   - Jika Transmisi Data Berhasil = YA -> Update Database SatuSehat Kemenkes (Status: Data Terintegrasi Nasional - END).
+   - Jika Transmisi Data Berhasil = TIDAK -> Lakukan re-try pengiriman dan enkripsi ulang otomatis.
+
+---
+
+### 3. SPESIFIKASI STACK TERAPLIKASI
+- Frontend Framework: React / Next.js dengan Tailwind CSS (gunakan Shadcn UI untuk komponen modal, table, dan badge agar presisi dengan Figma).
+- State & Camera Integration: Pustaka `html5-qrcode` / `react-qr-reader` untuk pengujian pemindaian resep.
+- Responsive Behavior: Tampilan desktop untuk Dashboard Dinkes & tampilan mobile-first untuk Fitur Pindai Apoteker (sesuai artboard di Figma).
+
+Tolong hasilkan kode frontend utama (Layout, Dashboard Dinkes, Dashboard Apoteker, Pindai QR), struktur database (Entity-Relationship), dan mock API endpoint untuk sistem TILIK ini.
