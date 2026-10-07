@@ -1,6 +1,12 @@
 import { NextResponse } from 'next/server';
-import { anomalyCases } from '@/lib/data';
+import { anomalyCases, provinceNames } from '@/lib/data';
 
 export async function GET() {
-  return NextResponse.json({ data: anomalyCases, summary: { active: 128, red: 15, yellow: 113, averageResponseDays: 1.2 }, generatedAt: new Date().toISOString() });
+  const red = anomalyCases.filter(item => item.flag === 'Red Flag').length;
+  return NextResponse.json({
+    data: anomalyCases,
+    summary: { active: anomalyCases.length, red, yellow: anomalyCases.length - red, averageResponseDays: 1.2 },
+    provinces: provinceNames,
+    generatedAt: new Date().toISOString(),
+  });
 }
